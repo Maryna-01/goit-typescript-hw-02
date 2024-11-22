@@ -1,5 +1,7 @@
 import styles from './ImageCard.module.css';
 
+
+
 interface Image {
     id: string;
     urls: { small: string };
