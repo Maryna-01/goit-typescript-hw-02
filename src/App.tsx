@@ -13,22 +13,21 @@ const UNSPLASH_API_URL = 'https://api.unsplash.com/search/photos';
 
 interface Image {
     id: string;
-    urls: { small: string; regular: string };
+    urls: { small: string; regular: string }; // Поле "regular" обов'язкове
     alt_description?: string;
 }
 
 function App() {
     const [images, setImages] = useState<Image[]>([]);
-    const [query, setQuery] = useState<string>('');
-    const [page, setPage] = useState<number>(1);
-    const [loading, setLoading] = useState<boolean>(false);
+    const [query, setQuery] = useState('');
+    const [page, setPage] = useState(1);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [modalImage, setModalImage] = useState<Image | null>(null);
 
     const fetchImages = async (searchQuery: string, pageNum: number) => {
         setLoading(true);
         setError(null);
-
         try {
             const response = await axios.get(UNSPLASH_API_URL, {
                 params: {
@@ -37,8 +36,12 @@ function App() {
                     client_id: UNSPLASH_API_KEY,
                 },
             });
+
+            // Фільтруємо тільки зображення, які мають поле "regular"
+            const validImages = response.data.results.filter((image: Image) => image.urls?.regular);
+
             setImages(prevImages =>
-                pageNum === 1 ? response.data.results : [...prevImages, ...response.data.results]
+                pageNum === 1 ? validImages : [...prevImages, ...validImages]
             );
         } catch (err) {
             console.error('Error:', err);
@@ -49,9 +52,7 @@ function App() {
     };
 
     const handleSearchSubmit = (newQuery: string) => {
-        if (newQuery.trim() === '') {
-            return;
-        }
+        if (newQuery.trim() === '') return;
         setQuery(newQuery);
         setPage(1);
         fetchImages(newQuery, 1);
@@ -79,9 +80,12 @@ function App() {
             <ImageGallery images={images} onImageClick={openModal} />
             {loading && <Loader />}
             {images.length > 0 && !loading && <LoadMoreBtn onClick={loadMoreImages} />}
-            {modalImage && <ImageModal imageUrl={modalImage.urls.regular} onClose={closeModal} />}
+            {modalImage && (
+                <ImageModal imageUrl={modalImage.urls.regular} onClose={closeModal} />
+            )}
         </div>
     );
 }
 
 export default App;
+
