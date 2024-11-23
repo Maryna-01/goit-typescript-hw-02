@@ -13,15 +13,21 @@ const UNSPLASH_API_URL = 'https://api.unsplash.com/search/photos';
 
 interface Image {
     id: string;
-    urls: { small: string; regular: string }; // Поле "regular" обов'язкове
+    urls: { small: string; regular: string };
     alt_description?: string;
+}
+
+interface UnsplashApiResponse {
+    total: number;
+    total_pages: number;
+    results: Image[];
 }
 
 function App() {
     const [images, setImages] = useState<Image[]>([]);
-    const [query, setQuery] = useState('');
-    const [page, setPage] = useState(1);
-    const [loading, setLoading] = useState(false);
+    const [query, setQuery] = useState<string>('');
+    const [page, setPage] = useState<number>(1);
+    const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [modalImage, setModalImage] = useState<Image | null>(null);
 
@@ -29,7 +35,7 @@ function App() {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get(UNSPLASH_API_URL, {
+            const response = await axios.get<UnsplashApiResponse>(UNSPLASH_API_URL, {
                 params: {
                     query: searchQuery,
                     page: pageNum,
@@ -37,7 +43,6 @@ function App() {
                 },
             });
 
-            // Фільтруємо тільки зображення, які мають поле "regular"
             const validImages = response.data.results.filter((image: Image) => image.urls?.regular);
 
             setImages(prevImages =>
